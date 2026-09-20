@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Deal A Day — La meilleure offre du web pendant 24h</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            accent: '#ff3366',
+                            neon: '#ff2d55',
+                            dark: '#0f172a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-grid-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .blur-locked {
+            filter: blur(6px);
+            user-select: none;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 25px rgba(255, 51, 102, 0.4);
+        }
+        .neon-glow-sm {
+            box-shadow: 0 0 12px rgba(255, 51, 102, 0.25);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 bg-grid-pattern antialiased selection:bg-brand-accent selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-accent flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-bolt text-amber-300"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                        ONE DEAL <span class="text-brand-accent">A DAY</span>
+                    </span>
+                    <span class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase">La pépite quotidienne</span>
+                </div>
+            </a>
+
+            <!-- Global Timer Pill (Hidden on Mobile, Visible on Desktop) -->
+            <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-brand-accent/20">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-accent"></span>
+                </span>
+                <span class="text-xs font-semibold text-slate-300">Prochain deal dans :</span>
+                <span id="global-timer" class="font-mono font-bold text-brand-accent">14:32:05</span>
+            </div>
+
+            <!-- User Auth Buttons -->
+            <div class="flex items-center gap-3">
+                <!-- Disconnected State -->
+                <div id="nav-guest-zone" class="flex items-center gap-2">
+                    <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        Connexion
+                    </button>
+                    <button onclick="openAuthModal('signup')" class="px-4 py-2 rounded-lg text-sm font-bold bg-brand-accent hover:bg-brand-600 text-white shadow-lg neon-glow-sm transition hover:scale-105 active:scale-95">
+                        Inscrire
+                    </button>
+                </div>
+
+                <!-- Connected State (Hidden by default) -->
+                <div id="nav-user-zone" class="hidden flex items-center gap-3">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                        <div class="w-7 h-7 rounded-full bg-brand-accent/20 border border-brand-accent/40 flex items-center justify-center text-brand-accent font-bold text-xs" id="user-avatar">
+                            JD
+                        </div>
+                        <span class="text-xs font-medium text-slate-300 hidden sm:inline" id="user-email-display">user@example.com</span>
+                    </div>
+                    <button onclick="logout()" class="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition" title="Déconnexion">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col gap-12">
+
+        <!-- Banner Alert Mobile Timer -->
+        <div class="md:hidden flex items-center justify-between p-3 rounded-xl glass-card border border-brand-accent/30 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
+                <span class="text-slate-300 font-medium">Temps restant :</span>
+            </div>
+            <span id="mobile-global-timer" class="font-mono font-bold text-brand-accent">14:32:05</span>
+        </div>
+
+        <!-- HERO Section: TODAY'S DEAL -->
+        <section class="relative rounded-3xl glass-card overflow-hidden border border-slate-800 shadow-2xl">
+            <!-- Background Accent Glow -->
+            <div class="absolute -top-32 -right-32 w-96 h-96 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 sm:p-8 lg:p-10 items-center">
+                
+                <!-- Left Column: Media & Gallery -->
+                <div class="lg:col-span-6 flex flex-col gap-4">
+                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 aspect-square sm:aspect-[4/3] flex items-center justify-center group">
+                        <!-- Discount Badge -->
+                        <div class="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-brand-accent text-white font-black text-sm tracking-wider uppercase shadow-lg neon-glow-sm">
+                            -50% EXCLUSIF
+                        </div>
+                        
+                        <!-- Product Image -->
+                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop" 
+                             alt="Écouteurs Premium ANC SoundWave Pro" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+                        
+                        <!-- Social Proof Overlay -->
+                        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-800/80">
+                            <div class="flex items-center gap-2">
+                                <div class="flex -space-x-2">
+                                    <img class="inline-block h-6 w-6 rounded-full ring-2 ring-slate-900" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60" alt=""/>
+                                    <img class="inline-block h-6 w-6 rounded-full ring-2 ring-slate-900" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60" alt=""/>
+                                    <img class="inline-block h-6 w-6 rounded-full ring-2 ring-slate-900" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=60" alt=""/>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-300"><strong class="text-amber-400">342</strong> membres ont réclamé ce deal</span>
+                            </div>
+                            <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                                <i class="fa-solid fa-check-circle"></i> Vérifié
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Deal Details & Interaction -->
+                <div class="lg:col-span-6 flex flex-col gap-6">
+                    <!-- Status Header -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/30 text-brand-accent text-xs font-bold uppercase tracking-wide">
+                            <span class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
+                            Offre Active 24H
+                        </div>
+                        <div class="text-xs text-slate-400 font-medium">
+                            Marchand : <span class="text-white font-semibold">AudioTech France</span>
+                        </div>
+                    </div>
+
+                    <!-- Title & Description -->
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                            Casque Sans Fil ANC Pro "SoundWave 5.0"
+                        </h1>
+                        <p class="mt-3 text-sm sm:text-base text-slate-400 leading-relaxed">
+                            Réduction de bruit active hybride 45dB, autonomie de 60 heures, son Hi-Res Audio haute-fidélité. Offre exclusive réservée à la communauté pour 24 heures seulement.
+                        </p>
+                    </div>
+
+                    <!-- Price Box -->
+                    <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Prix Communauté</span>
+                            <div class="flex items-baseline gap-3 mt-1">
+                                <span class="text-3xl sm:text-4xl font-black text-white">64,99 €</span>
+                                <span class="text-lg text-slate-500 line-through font-semibold">129,99 €</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm">
+                                Économie : 65,00 €
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC UNLOCK ZONE -->
+                    
+                    <!-- 1. GUEST VIEW (When not logged in) -->
+                    <div id="deal-locked-card" class="p-5 rounded-2xl bg-slate-900/60 border border-brand-accent/30 relative overflow-hidden flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Code Promo Exclusif</span>
+                            <span class="text-xs text-brand-accent font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-lock"></i> Verrouillé
+                            </span>
+                        </div>
+                        
+                        <!-- Blurred Code Container -->
+                        <div class="relative p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                            <span class="font-mono text-xl font-bold tracking-widest text-slate-500 blur-locked">
+                                ONEDEAL50
+                            </span>
+                            <span class="text-xs font-semibold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg">
+                                Masqué
+                            </span>
+                        </div>
+
+                        <!-- CTA Unlock Button -->
+                        <button onclick="openAuthModal('signup')" class="w-full py-4 rounded-xl font-extrabold text-base text-white bg-gradient-to-r from-brand-accent to-brand-600 hover:from-brand-600 hover:to-brand-accent shadow-xl neon-glow transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-key text-amber-300"></i>
+                            S'inscrire gratuitement pour débloquer
+                        </button>
+                        <p class="text-[11px] text-center text-slate-400">
+                            Création de compte en 10 secondes. Aucun engagement.
+                        </p>
+                    </div>
+
+                    <!-- 2. MEMBER VIEW (When logged in) -->
+                    <div id="deal-unlocked-card" class="hidden p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/40 relative overflow-hidden flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
+                                <i class="fa-solid fa-unlock"></i> Offre Débloquée !
+                            </span>
+                            <span class="text-xs text-slate-400">Valable jusqu'à minuit</span>
+                        </div>
+                        
+                        <!-- Unlocked Code Box -->
+                        <div class="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-3">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-bold block uppercase">Ton Code Promo :</span>
+                                <span id="promo-code-text" class="font-mono text-2xl font-black text-emerald-400 tracking-wider">ONEDEAL50</span>
+                            </div>
+                            <button onclick="copyPromoCode()" id="copy-btn" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs transition flex items-center gap-2">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copier</span>
+                            </button>
+                        </div>
+
+                        <!-- Affiliate Link CTA -->
+                        <a href="https://example.com/checkout?aff=onedealaday" target="_blank" onclick="trackAffiliateClick()" class="w-full py-4 rounded-xl font-extrabold text-base text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl transition-all duration-300 flex items-center justify-center gap-3 text-center">
+                            <span>Profiter du deal chez le marchand</span>
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </a>
+                        <p class="text-[11px] text-center text-slate-400">
+                            Redirection directe vers la boutique officielle. Le code promo s'appliquera au panier.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Reassurance Badges -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-6 rounded-2xl glass-card border border-slate-800 flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent text-xl shrink-0">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base">1 Seule Offre par 24H</h3>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Pas de spams ni de milliers de produits. Uniquement la meilleure offre sélectionnée et négociée chaque matin.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-6 rounded-2xl glass-card border border-slate-800 flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl shrink-0">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base">Partenariats Officiels</h3>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Chaque deal est direct marque. Nous exigeons le prix le plus bas du marché européen pendant 24h.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-6 rounded-2xl glass-card border border-slate-800 flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl shrink-0">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base">100% Gratuit à Vie</h3>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Aucun abonnement payant. La plateforme est rémunérée par les marques partenaires lors des achats.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Past Deals Section (Archive Preview) -->
+        <section class="flex flex-col gap-6 pt-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-white">Anciens Deals</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Découvre ce que nos membres ont économisé les jours précédents.</p>
+                </div>
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Expirés</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Past Deal Card 1 -->
+                <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden opacity-75 hover:opacity-100 transition group">
+                    <div class="relative aspect-video overflow-hidden bg-slate-950">
+                        <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur-md text-slate-400 font-bold text-[10px] uppercase">
+                            Expiré hier
+                        </span>
+                        <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&auto=format&fit=crop&q=60" alt="Appareil Photo Retro" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-300">
+                    </div>
+                    <div class="p-4 flex flex-col gap-2">
+                        <span class="text-[11px] font-semibold text-slate-400">Tech & Photo</span>
+                        <h3 class="font-bold text-slate-200 text-sm line-clamp-1">Appareil Instantané Vintage Mini 11</h3>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="font-bold text-white">39,99 €</span>
+                            <span class="text-xs text-slate-500 line-through">79,99 €</span>
+                            <span class="text-xs text-brand-accent font-bold ml-auto">-50%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Past Deal Card 2 -->
+                <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden opacity-75 hover:opacity-100 transition group">
+                    <div class="relative aspect-video overflow-hidden bg-slate-950">
+                        <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur-md text-slate-400 font-bold text-[10px] uppercase">
+                            Expiré il y a 2j
+                        </span>
+                        <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=60" alt="Montre Connectée Sport" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-300">
+                    </div>
+                    <div class="p-4 flex flex-col gap-2">
+                        <span class="text-[11px] font-semibold text-slate-400">Objet Connecté</span>
+                        <h3 class="font-bold text-slate-200 text-sm line-clamp-1">Montre Connectée FitTrack Ultra AMOLED</h3>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="font-bold text-white">89,00 €</span>
+                            <span class="text-xs text-slate-500 line-through">199,00 €</span>
+                            <span class="text-xs text-brand-accent font-bold ml-auto">-55%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Past Deal Card 3 -->
+                <div class="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden opacity-75 hover:opacity-100 transition group">
+                    <div class="relative aspect-video overflow-hidden bg-slate-950">
+                        <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur-md text-slate-400 font-bold text-[10px] uppercase">
+                            Expiré il y a 3j
+                        </span>
+                        <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=600&auto=format&fit=crop&q=60" alt="Cafetière Espresso Barista" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-300">
+                    </div>
+                    <div class="p-4 flex flex-col gap-2">
+                        <span class="text-[11px] font-semibold text-slate-400">Maison & Cuisine</span>
+                        <h3 class="font-bold text-slate-200 text-sm line-clamp-1">Machine Espresso Compact Express Barista</h3>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="font-bold text-white">119,00 €</span>
+                            <span class="text-xs text-slate-500 line-through">249,00 €</span>
+                            <span class="text-xs text-brand-accent font-bold ml-auto">-52%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Email Subscription Bar -->
+        <section class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 p-8 text-center flex flex-col items-center gap-4 relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-accent/20 rounded-full blur-2xl"></div>
+            
+            <div class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-accent text-xl">
+                <i class="fa-regular fa-envelope"></i>
+            </div>
+            
+            <div class="max-w-xl">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Ne manque plus aucun deal</h3>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                    Reçois chaque matin à 9h pile l'offre du jour directement dans ta boîte mail.
+                </p>
+            </div>
+
+            <form onsubmit="handleNewsletterSubmit(event)" class="w-full max-w-md flex flex-col sm:flex-row gap-2 mt-2">
+                <input type="email" placeholder="Ton adresse email..." required class="px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-brand-accent flex-grow">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-slate-100 hover:bg-white text-slate-950 font-bold text-sm transition shrink-0">
+                    S'abonner
+                </button>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 One Deal A Day. Tous droits réservés.</p>
+            <div class="flex items-center gap-6">
+                <a href="#" class="hover:text-slate-300">Mentions Légales</a>
+                <a href="#" class="hover:text-slate-300">Confidentialité</a>
+                <a href="#" class="hover:text-slate-300">Devenir Annonceur</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AUTHENTICATION MODAL (POPUP) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="relative w-full max-w-md rounded-2xl glass-card border border-slate-800 p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Close Button -->
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="text-center flex flex-col items-center gap-2 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-brand-accent/20 border border-brand-accent/40 flex items-center justify-center text-brand-accent text-2xl">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h3 id="modal-title" class="text-xl font-bold text-white">Créer un compte One Deal A Day</h3>
+                <p id="modal-subtitle" class="text-xs text-slate-400">Inscris-toi en 1 clic pour afficher l'offre du jour</p>
+            </div>
+
+            <!-- Social Auth Simulation -->
+            <button onclick="simulateAuth('google')" class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm font-semibold text-slate-200 transition flex items-center justify-center gap-3 mb-4">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3h3.88c2.28-2.1 3.665-5.2 3.665-9.12z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.1 0-5.74-2.1-6.68-4.92H1.3v3.1C3.3 21.37 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.32 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.57H1.3C.47 8.23 0 10.06 0 12s.47 3.77 1.3 5.43l4.02-3.1z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.3 2.63 1.3 6.57l4.02 3.1c.94-2.82 3.58-4.92 6.68-4.92z"/></svg>
+                <span>Continuer avec Google</span>
+            </button>
+
+            <div class="flex items-center gap-3 my-4">
+                <div class="h-px bg-slate-800 flex-grow"></div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase">ou avec email</span>
+                <div class="h-px bg-slate-800 flex-grow"></div>
+            </div>
+
+            <!-- Email Form -->
+            <form onsubmit="handleAuthSubmit(event)" class="flex flex-col gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+                    <input type="email" id="auth-email" required placeholder="nom@exemple.com" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-brand-accent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Mot de passe</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-brand-accent">
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full py-3.5 mt-2 rounded-xl bg-brand-accent hover:bg-brand-600 text-white font-bold text-sm shadow-lg neon-glow-sm transition">
+                    Créer mon compte
+                </button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <button onclick="toggleAuthMode()" id="toggle-auth-mode-btn" class="text-xs text-slate-400 hover:text-white underline">
+                    Déjà inscrit ? Connecte-toi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden p-4 rounded-xl glass-card border border-emerald-500/50 text-white text-xs font-semibold shadow-2xl flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message">Action réussie</span>
+    </div>
+
+    <script>
+        // State Management
+        let isLoggedIn = false;
+        let currentUserEmail = "";
+        let currentAuthMode = 'signup'; // 'signup' or 'login'
+
+        // 1. Timer Logic (24 Hours Countdown)
+        function startTimer() {
+            // Set countdown target (24h from now simulation)
+            let duration = 14 * 3600 + 32 * 60 + 5; // 14h 32m 05s
+            
+            const desktopTimer = document.getElementById('global-timer');
+            const mobileTimer = document.getElementById('mobile-global-timer');
+
+            setInterval(() => {
+                if (duration <= 0) duration = 86400; // Reset
+                
+                const hours = Math.floor(duration / 3600);
+                const minutes = Math.floor((duration % 3600) / 60);
+                const seconds = duration % 60;
+
+                const formatted = 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+
+                if (desktopTimer) desktopTimer.textContent = formatted;
+                if (mobileTimer) mobileTimer.textContent = formatted;
+
+                duration--;
+            }, 1000);
+        }
+
+        // 2. Auth Modal Handlers
+        function openAuthModal(mode = 'signup') {
+            currentAuthMode = mode;
+            updateModalUI();
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            currentAuthMode = (currentAuthMode === 'signup') ? 'login' : 'signup';
+            updateModalUI();
+        }
+
+        function updateModalUI() {
+            const title = document.getElementById('modal-title');
+            const subtitle = document.getElementById('modal-subtitle');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const toggleBtn = document.getElementById('toggle-auth-mode-btn');
+
+            if (currentAuthMode === 'signup') {
+                title.textContent = "Créer un compte One Deal A Day";
+                subtitle.textContent = "Inscris-toi en 1 clic pour afficher l'offre du jour";
+                submitBtn.textContent = "Créer mon compte & Débloquer";
+                toggleBtn.textContent = "Déjà inscrit ? Connecte-toi";
+            } else {
+                title.textContent = "Ravi de te revoir";
+                subtitle.textContent = "Connecte-toi pour accéder à tes deals exclusifs";
+                submitBtn.textContent = "Se connecter";
+                toggleBtn.textContent = "Pas encore de compte ? S'inscrire";
+            }
+        }
+
+        // 3. Auth Form Actions
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            performLogin(email);
+        }
+
+        function simulateAuth(provider) {
+            performLogin("user.google@gmail.com");
+        }
+
+        function performLogin(email) {
+            isLoggedIn = true;
+            currentUserEmail = email;
+
+            // Update UI State
+            document.getElementById('nav-guest-zone').classList.add('hidden');
+            document.getElementById('nav-user-zone').classList.remove('hidden');
+            document.getElementById('user-email-display').textContent = email;
+            document.getElementById('user-avatar').textContent = email.substring(0, 2).toUpperCase();
+
+            // Unlock Deal Content
+            document.getElementById('deal-locked-card').classList.add('hidden');
+            document.getElementById('deal-unlocked-card').classList.remove('hidden');
+
+            closeAuthModal();
+            showToast("Compte connecté ! Le code promo et le lien sont débloqués.");
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            currentUserEmail = "";
+
+            // Reset UI
+            document.getElementById('nav-guest-zone').classList.remove('hidden');
+            document.getElementById('nav-user-zone').classList.add('hidden');
+
+            document.getElementById('deal-locked-card').classList.remove('hidden');
+            document.getElementById('deal-unlocked-card').classList.add('hidden');
+
+            showToast("Déconnexion réussie.");
+        }
+
+        // 4. Promo Code Copy
+        function copyPromoCode() {
+            const code = document.getElementById('promo-code-text').innerText;
+            
+            // Clipboard copy fallbacks
+            const tempInput = document.createElement('input');
+            tempInput.value = code;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copié !</span>`;
+            copyBtn.classList.replace('bg-emerald-500', 'bg-emerald-400');
+
+            setTimeout(() => {
+                copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Copier</span>`;
+                copyBtn.classList.replace('bg-emerald-400', 'bg-emerald-500');
+            }, 2000);
+
+            showToast("Code promo copié dans le presse-papier !");
+        }
+
+        function trackAffiliateClick() {
+            showToast("Redirection vers le partenaire marchand (Cookie d'affiliation activé)...");
+        }
+
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            showToast("Merci ! Tu recevras le deal tous les matins à 9h.");
+            e.target.reset();
+        }
+
+        // Helper Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        // Initialization
+        window.onload = function() {
+            startTimer();
+        };
+    </script>
+</body>
+</html>
